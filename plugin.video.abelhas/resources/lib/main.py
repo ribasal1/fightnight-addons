@@ -108,7 +108,7 @@ def list_folders(url,query=None,result=None):
                 headers={'Accept':'*/*','Accept-Encoding':'gzip,deflate','Connection':'keep-alive','X-Requested-With':'XMLHttpRequest'}
                 if result==None: result = requester.request(url,headers=urllib.urlencode(headers))
                 result = result.decode('iso-8859-1').encode('utf-8')
-                result = requester.parseDOM(result, 'div', attrs = {'class': 'collections_list responsive_width'})[0]
+                result = requester.parseDOM(result, 'div', attrs = {'class': 'collections_list'})[0]
                 items=requester.parseDOM(result, 'li')
                 for indiv in items:
                         name = requester.replaceHTMLCodes(requester.parseDOM(indiv, 'a', attrs = {'class': 'name'})[0].encode('utf-8'))
