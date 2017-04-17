@@ -10,14 +10,16 @@ def login():
         import requests
         headers={'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8','Accept-Encoding':'gzip, deflate, sdch','Accept-Language':'pt-PT,pt;q=0.8,en-US;q=0.6,en;q=0.4','Cache-Control':'no-cache','Connection':'keep-alive','Pragma':'no-cache','Upgrade-Insecure-Requests':'1','User-Agent':user_agent}
         cookie=requester.request(CopiaPopURL,headers=urllib.urlencode(headers),output='cookie')
-        
+
         timestamp = str(int(time.time()))+str(randint(0,9))+str(randint(0,9))+str(randint(0,9))
         url = CopiaPopURL + '/action/Account/Login?returnUrl=%2F&TimeStamp=' + timestamp
         headers={'Cookie':cookie,'Connection': 'keep-alive','Pragma': 'no-cache','Cache-Control': 'no-cache','Accept': '*/*','X-Requested-With': 'XMLHttpRequest','User-Agent': user_agent,'Referer': CopiaPopURL,'Accept-Encoding': 'gzip, deflate, sdch','Accept-Language': 'pt-PT,pt;q=0.8,en-US;q=0.6,en;q=0.4'}
-        result = requester.request(url,headers=urllib.urlencode(headers))
+        result = requester.request(url,headers=headers)
 
         headers={'Cookie':cookie,'Accept':'*/*','Accept-Encoding':'gzip, deflate','Accept-Language':'pt-PT,pt;q=0.8,en-US;q=0.6,en;q=0.4','Cache-Control':'no-cache','Connection':'keep-alive','Content-Type':'application/x-www-form-urlencoded; charset=UTF-8','Origin':CopiaPopURL,'Pragma':'no-cache','Referer':CopiaPopURL,'User-Agent':user_agent,'X-Requested-With':'XMLHttpRequest'}
-        token = requester.parseDOM(result, 'input', ret='value', attrs = {'name': '__RequestVerificationToken'})[0]
+        d = result.decode('ascii', 'ignore')
+        tmpJSON = json.loads(d)['Content']
+        token = requester.parseDOM(tmpJSON, 'input', ret='value', attrs = {'name': '__RequestVerificationToken'})[0]
         post={'UserName':setting('copiapop-username'),'Password':setting('copiapop-password'),'__RequestVerificationToken':token}
         formurl = CopiaPopURL + '/action/Account/Login?returnUrl=%2F'
         raw=requests.post(formurl,data=post,headers=headers)
@@ -41,7 +43,7 @@ def first_menu():
                 sys.exit(0)
         else:
                 login()
-        
+
         #addDirectoryItem("[COLOR red][B]Addon em actualização[/B][/COLOR]", 'user', 'movies.png', 'DefaultMovies.png')
         addDirectoryItem("Colecções mais recentes", 'recents', 'movies.png', 'DefaultMovies.png')
         addDirectoryItem("Ir para um utilizador", 'user', 'movies.png', 'DefaultMovies.png')
@@ -56,7 +58,7 @@ def open_folder(url,page="1"):
                 final_url = url + '/list,1,%s?ref=pager' % page
         else: final_url = url
         result = requester.request(final_url,headers=urllib.urlencode(headers))
-        
+
         if checkvalid(result):
                 list=list_folders(final_url,result=result)
                 list.extend(list_items(final_url,result=result))
@@ -78,7 +80,7 @@ def go_to_user(query=None):
                 query = k.getText() if k.isConfirmed() else None
         if (query == None or query == ''): return
         url='%s/%s' % (CopiaPopURL,query)
-        open_folder(url)    
+        open_folder(url)
 
 def search(query=None):
         types=['Todos os ficheiros','Video','Imagens','Musica','Documentos','Arquivos','Programas']
@@ -117,8 +119,8 @@ def list_folders(url,query=None,result=None):
                 list = sorted(list, key=lambda k: re.sub('(^the |^a )', '', k['name'].lower()))
                 return list
         except: return []
-                
-                
+
+
 def list_items(url,query=None,result=None,content_type=None):
         list=[]
         try:
@@ -206,7 +208,7 @@ def check_subtitle(original_url,original_name):
                 (etype, value, traceback) = sys.exc_info()
                 Debug("%s\n%s\n%s" % (etype,value,traceback))
         return subtitle_url
-                        
+
 def play_url(url,name='CopiaPop File',thumb=None,original_url='http://www.example.com/foobar.mp4',original_filename='foobar.mp4'):
         if not addonInfo('id').lower() == infoLabel('Container.PluginName').lower():
                 progress = True if setting('progress.dialog') == '1' else False
@@ -214,12 +216,12 @@ def play_url(url,name='CopiaPop File',thumb=None,original_url='http://www.exampl
                 resolve(int(sys.argv[1]), True, item(path=''))
                 execute('Dialog.Close(okdialog)')
                 progress = True
-        
+
         item_ind = item(label=name,path=url, iconImage='DefaultVideo.png', thumbnailImage=thumb)
         item_ind.setInfo(type='Video', infoLabels = {})
         item_ind.setProperty('Video', 'true')
         item_ind.setProperty('IsPlayable', 'true')
-                        
+
         player.play(url, item_ind)
         resolve(int(sys.argv[1]), True, item_ind)
 
